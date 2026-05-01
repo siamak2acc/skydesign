@@ -1,0 +1,36 @@
+<form class="search-form" action="/flight-deal-finder" method="post">
+  <% if (typeof error !== 'undefined' && error) { %>
+    <p class="form-alert" role="alert"><%= error %></p>
+  <% } %>
+  <div class="field-grid">
+    <label>
+      <span>From</span>
+      <input name="from" type="text" autocomplete="address-level2" placeholder="Sydney" value="<%= typeof formValues !== 'undefined' ? formValues.from : '' %>" required>
+    </label>
+    <label>
+      <span>To</span>
+      <input name="to" type="text" autocomplete="address-level2" placeholder="Tokyo" value="<%= typeof formValues !== 'undefined' ? formValues.to : '' %>" required>
+    </label>
+    <label>
+      <span>Departure date</span>
+      <input name="departureDate" type="date" value="<%= typeof formValues !== 'undefined' ? formValues.departureDate : '' %>" required>
+    </label>
+    <label>
+      <span>Return date</span>
+      <input name="returnDate" type="date" value="<%= typeof formValues !== 'undefined' ? formValues.returnDate : '' %>">
+    </label>
+    <label>
+      <span>Travellers</span>
+      <input name="travellers" type="number" min="1" max="9" value="<%= typeof formValues !== 'undefined' ? formValues.travellers : '1' %>">
+    </label>
+    <label>
+      <span>Cabin class</span>
+      <select name="cabinClass">
+        <% cabinClasses.forEach((cabinClass) => { %>
+          <option value="<%= cabinClass %>" <%= typeof formValues !== 'undefined' && formValues.cabinClass === cabinClass ? 'selected' : '' %>><%= cabinClass %></option>
+        <% }) %>
+      </select>
+    </label>
+  </div>
+  <button class="button button-primary" type="submit">Find flight deals</button>
+</form>

@@ -1,0 +1,23 @@
+<%- include('partials/head') %>
+
+<section class="page-hero compact">
+  <p class="eyebrow">Flight Deal Finder</p>
+  <h1>Search for a flight deal</h1>
+  <p>Enter a route and dates to generate the current server-side affiliate redirect placeholder.</p>
+</section>
+
+<section class="tool-shell">
+  <%- include('partials/search-form') %>
+
+  <% if (typeof affiliateUrl !== 'undefined' && affiliateUrl) { %>
+    <aside class="result-panel" aria-live="polite">
+      <p class="eyebrow">Redirect generated</p>
+      <h2>Affiliate placeholder URL</h2>
+      <p>This URL is generated on the server and can later be replaced with Skyscanner or affiliate API logic.</p>
+      <a class="result-url" href="<%= affiliateUrl %>" rel="nofollow sponsored"><%= affiliateUrl %></a>
+      <a class="button button-primary" href="<%= affiliateUrl %>" rel="nofollow sponsored">Continue to partner</a>
+    </aside>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>

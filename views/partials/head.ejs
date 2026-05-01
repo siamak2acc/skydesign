@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= pageTitle %></title>
+  <meta name="description" content="<%= metaDescription %>">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/script.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="SkyDesign home">
+      <span class="brand-mark" aria-hidden="true">SD</span>
+      <span>SkyDesign</span>
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      <span class="sr-only">Toggle navigation</span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+      <a class="<%= activePath === '/' ? 'is-active' : '' %>" href="/">Home</a>
+      <a class="<%= activePath === '/flight-deal-finder' ? 'is-active' : '' %>" href="/flight-deal-finder">Flight Deal Finder</a>
+      <a class="<%= activePath === '/cheap-flights' ? 'is-active' : '' %>" href="/cheap-flights">Cheap Flights</a>
+      <a class="<%= activePath === '/about' ? 'is-active' : '' %>" href="/about">About</a>
+      <a class="<%= activePath === '/contact' ? 'is-active' : '' %>" href="/contact">Contact</a>
+    </nav>
+  </header>
+  <main>

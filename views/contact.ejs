@@ -1,0 +1,31 @@
+<%- include('partials/head') %>
+
+<section class="page-hero">
+  <p class="eyebrow">Contact</p>
+  <h1>Contact SkyDesign</h1>
+  <p>For flight deal partnerships, affiliate setup, or website enquiries, contact the SkyDesign team.</p>
+</section>
+
+<section class="contact-panel">
+  <div>
+    <h2>Partnership enquiries</h2>
+    <p>Email: <a href="mailto:hello@skydesign.com.au">hello@skydesign.com.au</a></p>
+  </div>
+  <form class="contact-form" action="mailto:hello@skydesign.com.au" method="post" enctype="text/plain">
+    <label>
+      <span>Name</span>
+      <input name="name" type="text" autocomplete="name">
+    </label>
+    <label>
+      <span>Email</span>
+      <input name="email" type="email" autocomplete="email">
+    </label>
+    <label>
+      <span>Message</span>
+      <textarea name="message" rows="5"></textarea>
+    </label>
+    <button class="button button-primary" type="submit">Send enquiry</button>
+  </form>
+</section>
+
+<%- include('partials/footer') %>

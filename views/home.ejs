@@ -1,0 +1,47 @@
+<%- include('partials/head') %>
+
+<section class="hero">
+  <div class="hero-content">
+    <p class="eyebrow">skydesign.com.au</p>
+    <h1>SkyDesign Flight Deal Finder</h1>
+    <p class="hero-copy">Start a flight search, capture the route details, and send travellers through a server-side affiliate redirect placeholder ready for future Skyscanner or partner integration.</p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="/flight-deal-finder">Search flights</a>
+      <a class="button button-secondary" href="/cheap-flights">Cheap flight tips</a>
+    </div>
+  </div>
+  <div class="hero-visual" aria-hidden="true">
+    <div class="route-card">
+      <span>SYD</span>
+      <div class="route-line"></div>
+      <span>NRT</span>
+    </div>
+    <div class="deal-ticket">
+      <span>Deal watch</span>
+      <strong>Flexible dates</strong>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="section-header">
+    <p class="eyebrow">How it works</p>
+    <h2>Built for affiliate flight discovery</h2>
+  </div>
+  <div class="feature-grid">
+    <article class="feature-card">
+      <h3>Server-rendered search</h3>
+      <p>The form posts to Express, keeping future API credentials and affiliate logic off the frontend.</p>
+    </article>
+    <article class="feature-card">
+      <h3>Placeholder redirect</h3>
+      <p>Submitted route details are encoded into a configurable affiliate URL until the live partner integration is ready.</p>
+    </article>
+    <article class="feature-card">
+      <h3>Hostinger ready</h3>
+      <p>The app runs on Node 20 with `npm start`, includes a `/health` endpoint, and needs no build step.</p>
+    </article>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
