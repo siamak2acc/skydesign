@@ -1,149 +1,108 @@
 # SkyDesign Flight Deal Finder
 
-Static airline and flight deal finder website for `skydesign.com.au`.
+Node.js, Express, and EJS flight deal finder for `skydesign.com.au`.
 
-This version is designed for a WebTechX-style static FTP deployment:
+The app is designed for Hostinger Node.js Web App hosting with deployment from GitHub. Travelpayouts is integrated safely: the API token is used only on the backend and is never sent to frontend JavaScript.
 
-- Build locally with Node.js tooling
-- Upload static files to Hostinger `public_html` by FTP
-- Keep DNS in Cloudflare
-- Do not require a live Node.js server
-- Keep private API keys out of frontend code
+## Hostinger Build Settings
 
-## Project Structure
+- Install command: `npm install`
+- Build command: leave empty
+- Start command: `npm start`
+- Node version: `20`
 
-```text
-package.json
-deploy_static_site.js
-site/
-  index.html
-  flight-deals.html
-  cheap-flights.html
-  about.html
-  contact.html
-  sitemap.xml
-  robots.txt
-  .htaccess
-  assets/
-    style.css
-    script.js
-.env.example
-README.md
+## Environment Variables
+
+Set these in Hostinger's Node.js Web App environment settings:
+
+```bash
+NODE_ENV=production
+PORT=3000
+SITE_URL=https://skydesign.com.au
+TP_MARKER=your_travelpayouts_marker
+TP_API_TOKEN=your_travelpayouts_data_api_token
 ```
 
-The build script outputs deployable files to `dist/`. Clean URLs are generated as folders:
+Optional:
 
-```text
-dist/
-  index.html
-  flight-deals/index.html
-  cheap-flights/index.html
-  about/index.html
-  contact/index.html
-  assets/
-  sitemap.xml
-  robots.txt
-  .htaccess
+```bash
+TP_WIDGET_EMBED_URL=
 ```
 
-## Run Locally
+Never place `TP_API_TOKEN` in frontend JavaScript, EJS output, public assets, GitHub secrets shown in pages, or browser-visible config.
 
-Install dependencies:
+## Routes
+
+- `/` - Home
+- `/flight-deal-finder` - Flight search form and Travelpayouts-backed results
+- `/api/flight-prices` - Backend JSON route for Travelpayouts price lookup
+- `/cheap-flights` - Cheap flights content
+- `/about` - About page
+- `/contact` - Contact page
+- `/health` - Health check
+- `/env-check` - Shows only `OK` or `MISSING` for required env vars
+
+## Travelpayouts Integration
+
+`/api/flight-prices` accepts:
+
+```text
+origin
+destination
+depart_date
+return_date
+currency
+adults
+```
+
+The server calls the Travelpayouts Data API with:
+
+```text
+X-Access-Token: process.env.TP_API_TOKEN
+```
+
+The token is not logged and is not returned in any route response.
+
+Price results are cached in memory for 24 hours by search parameters. If Travelpayouts fails or returns no results, the UI shows a clean Aviasales fallback link using `TP_MARKER`.
+
+## Local Setup
 
 ```bash
 npm install
-```
-
-Build the static site:
-
-```bash
-npm run build
-```
-
-Preview locally:
-
-```bash
-npm run serve
+copy .env.example .env
+npm run dev
 ```
 
 Open:
 
 ```text
-http://localhost:4173
+http://localhost:3000
 ```
 
-## Configure FTP
-
-Create `.env` from `.env.example`:
-
-```bash
-cp .env.example .env
-```
-
-Set your Hostinger FTP details:
-
-```bash
-SITE_URL=https://skydesign.com.au
-FTP_HOST=your-hostinger-ftp-host
-FTP_PORT=21
-FTP_USER=your-ftp-username
-FTP_PASSWORD=your-ftp-password
-FTP_SECURE=false
-FTP_REMOTE_DIR=/public_html
-FTP_CLEAR_REMOTE=false
-```
-
-Use `FTP_CLEAR_REMOTE=true` only if you want the deploy script to clear the current FTP directory before uploading the new build.
-
-## Deploy
-
-Deploy to Hostinger FTP:
-
-```bash
-npm run deploy
-```
-
-The deploy script will:
-
-1. Build `dist/`
-2. Connect to Hostinger FTP
-3. Upload static HTML
-4. Upload `/assets`
-5. Upload `.htaccess`
-6. Upload `sitemap.xml`
-7. Upload `robots.txt`
-
-## Cloudflare DNS
-
-Keep DNS managed in Cloudflare. Point `skydesign.com.au` to Hostinger using the records Hostinger provides.
-
-The included `.htaccess` handles:
-
-- Non-www redirect to `https://skydesign.com.au`
-- HTTPS redirect
-- `.html` to clean URL redirect
-- Clean URL rewrites for generated folder pages
-- Directory listing disabled
-
-## Affiliate Placeholder
-
-The Flight Deal Finder page currently generates a placeholder URL:
+Check environment status:
 
 ```text
-https://skydesign.com.au/affiliate-placeholder/?source=skydesign&from=SYD&to=NRT&departure_date=...
+http://localhost:3000/env-check
 ```
 
-This is intentionally static and does not expose any private keys.
+Expected shape:
 
-## Future Skyscanner or Affiliate API Integration
+```json
+{
+  "TP_MARKER": "OK",
+  "TP_API_TOKEN": "OK"
+}
+```
 
-Do not put Skyscanner, Travelpayouts, airline API, or affiliate secrets in `site/assets/script.js`.
+## Test Steps
 
-Use one of these safe patterns later:
+1. Visit `/health` and confirm it returns `status: ok`.
+2. Visit `/env-check` and confirm `TP_MARKER` and `TP_API_TOKEN` are `OK`.
+3. Visit `/flight-deal-finder`.
+4. Search with IATA codes such as `SYD` to `DXB`, dates, adults, and currency.
+5. Confirm returned results show `View Deal` buttons.
+6. If no API results are available, confirm the Aviasales fallback button appears.
 
-- Add a private backend helper hosted separately from the static site
-- Add a serverless function that reads secrets from environment variables
-- Use a Python helper script for scheduled deal imports into static JSON
-- Generate public static deal data at build time, then upload it with the site
+## Safe Future Changes
 
-The frontend should call only public endpoints or read public static JSON. Any API key, affiliate secret, signing key, or token must stay server-side.
+Keep partner credentials server-side. If you add Skyscanner, another Travelpayouts endpoint, or airline APIs later, call them from Express routes or private backend helpers only. The frontend should receive sanitized result data and affiliate links, never raw API tokens.

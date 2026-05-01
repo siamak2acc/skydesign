@@ -130,7 +130,8 @@ a {
 .content-grid,
 .text-section,
 .contact-panel,
-.widget-section {
+.widget-section,
+.deals-section {
   width: min(1120px, calc(100% - 36px));
   margin-inline: auto;
 }
@@ -439,6 +440,84 @@ textarea {
   color: var(--ink);
 }
 
+.fallback-button {
+  margin-top: 18px;
+}
+
+.deals-section {
+  margin-bottom: 64px;
+}
+
+.deal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.deal-card,
+.empty-state {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.deal-card {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+}
+
+.deal-card h3 {
+  margin: 4px 0 8px;
+  font-size: 1.7rem;
+}
+
+.deal-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.route-code {
+  color: var(--accent-dark) !important;
+  font-weight: 900;
+}
+
+.deal-card dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.deal-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.deal-card dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.deal-card dd {
+  margin: 0;
+  font-weight: 900;
+}
+
+.empty-state {
+  display: grid;
+  gap: 10px;
+  padding: 26px;
+  color: var(--muted);
+  background: var(--soft);
+}
+
+.empty-state strong {
+  color: var(--ink);
+}
+
 .content-grid,
 .text-section,
 .contact-panel {
@@ -518,7 +597,8 @@ textarea {
   }
 
   .feature-grid,
-  .content-grid {
+  .content-grid,
+  .deal-grid {
     grid-template-columns: 1fr;
   }
 }

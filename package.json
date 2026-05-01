@@ -1,9 +1,11 @@
 {
   "name": "skydesign-flight-deal-finder",
   "version": "1.0.0",
-  "description": "Static flight deal finder website for skydesign.com.au with FTP deployment tooling.",
-  "main": "deploy_static_site.js",
+  "description": "Node.js flight deal finder website for skydesign.com.au with Travelpayouts integration.",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
     "build": "node deploy_static_site.js build",
     "serve": "node deploy_static_site.js serve",
     "deploy": "node deploy_static_site.js deploy"
@@ -13,6 +15,8 @@
   },
   "dependencies": {
     "basic-ftp": "^5.0.5",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2"
   }
 }

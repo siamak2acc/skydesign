@@ -3,7 +3,7 @@
 <section class="page-hero compact">
   <p class="eyebrow">Flight Deal Finder</p>
   <h1>Search for a flight deal</h1>
-  <p>Enter IATA airport codes and dates. SkyDesign builds the Aviasales affiliate link on the server and redirects you without exposing any API keys.</p>
+  <p>Enter IATA airport codes and dates. SkyDesign checks Travelpayouts server-side, keeps API tokens private, and falls back to Aviasales affiliate search when live prices are unavailable.</p>
 </section>
 
 <section class="tool-shell">
@@ -11,30 +11,80 @@
 
   <aside class="result-panel">
     <p class="eyebrow">Travelpayouts</p>
-    <h2>Redirect-based search</h2>
-    <p>Submissions are converted into Aviasales search links with your Travelpayouts marker added server-side.</p>
+    <h2>Secure price lookup</h2>
+    <p>Flight prices are requested by the Express backend using the Travelpayouts API token in the `X-Access-Token` header.</p>
     <ul class="check-list">
-      <li>No frontend API keys</li>
-      <li>No dependency on unknown scripts</li>
-      <li>Ready for future partner logic</li>
+      <li>Token never reaches frontend code</li>
+      <li>Results are cached for 24 hours</li>
+      <li>Affiliate fallback remains available</li>
     </ul>
+    <% if (fallbackUrl) { %>
+      <a class="button button-secondary fallback-button" href="<%= fallbackUrl %>" rel="nofollow sponsored">Search on Aviasales</a>
+    <% } %>
   </aside>
 </section>
 
-<section class="widget-section">
-  <div class="section-header">
-    <p class="eyebrow">Optional widget</p>
-    <h2>Controlled Travelpayouts embed</h2>
-    <p>Set `TP_WIDGET_EMBED_URL` to a trusted Travelpayouts or Aviasales widget URL to render an iframe here. Leave it empty to keep the page script-free.</p>
-  </div>
-  <% if (widgetEmbedUrl) { %>
-    <iframe class="travel-widget" src="<%= widgetEmbedUrl %>" title="Travelpayouts flight widget" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-  <% } else { %>
-    <div class="widget-placeholder">
-      <strong>Widget disabled</strong>
-      <span>No widget URL is configured.</span>
+<% if (searched) { %>
+  <section class="deals-section">
+    <div class="section-header">
+      <p class="eyebrow">Results</p>
+      <h2>Flight price results</h2>
+      <% if (typeof cached !== 'undefined' && cached) { %>
+        <p>Showing cached results from the last 24 hours.</p>
+      <% } else { %>
+        <p>Prices are cached and may change when you continue to the booking partner.</p>
+      <% } %>
     </div>
-  <% } %>
-</section>
+
+    <% if (apiError) { %>
+      <div class="empty-state">
+        <strong><%= apiError %></strong>
+        <span>Use the fallback search button to continue with your affiliate marker.</span>
+        <% if (fallbackUrl) { %>
+          <a class="button button-primary" href="<%= fallbackUrl %>" rel="nofollow sponsored">Search on Aviasales</a>
+        <% } %>
+      </div>
+    <% } else if (results && results.length) { %>
+      <div class="deal-grid">
+        <% results.forEach((deal) => { %>
+          <article class="deal-card">
+            <div>
+              <p class="route-code"><%= deal.origin %> → <%= deal.destination %></p>
+              <h3><%= deal.currency %> <%= Number(deal.price).toLocaleString('en-AU') %></h3>
+              <p><%= deal.departDate %><%= deal.returnDate ? ` to ${deal.returnDate}` : '' %></p>
+            </div>
+            <dl>
+              <div>
+                <dt>Stops</dt>
+                <dd><%= typeof deal.transfers === 'number' ? deal.transfers : 'Any' %></dd>
+              </div>
+              <% if (deal.airline) { %>
+                <div>
+                  <dt>Airline</dt>
+                  <dd><%= deal.airline %></dd>
+                </div>
+              <% } %>
+              <% if (deal.gate) { %>
+                <div>
+                  <dt>Gate</dt>
+                  <dd><%= deal.gate %></dd>
+                </div>
+              <% } %>
+            </dl>
+            <a class="button button-primary" href="<%= deal.dealUrl %>" rel="nofollow sponsored">View Deal</a>
+          </article>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <strong>No cached Travelpayouts prices found for this search.</strong>
+        <span>You can still continue to Aviasales affiliate search.</span>
+        <% if (fallbackUrl) { %>
+          <a class="button button-primary" href="<%= fallbackUrl %>" rel="nofollow sponsored">Search on Aviasales</a>
+        <% } %>
+      </div>
+    <% } %>
+  </section>
+<% } %>
 
 <%- include('partials/footer') %>
