@@ -103,6 +103,14 @@ Expected shape:
 5. Confirm returned results show `View Deal` buttons.
 6. If no API results are available, confirm the Aviasales fallback button appears.
 
+For backend diagnostics, call:
+
+```text
+/api/flight-prices?origin=SYD&destination=DXB&depart_date=2026-06-01&return_date=2026-06-10&currency=AUD&adults=1&debug=1
+```
+
+Debug output includes the Travelpayouts endpoint URL without token, sanitized request params, upstream HTTP status, and a response body summary. It never includes `TP_API_TOKEN`.
+
 ## Safe Future Changes
 
 Keep partner credentials server-side. If you add Skyscanner, another Travelpayouts endpoint, or airline APIs later, call them from Express routes or private backend helpers only. The frontend should receive sanitized result data and affiliate links, never raw API tokens.

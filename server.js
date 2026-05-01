@@ -33,6 +33,8 @@ function renderPage(res, view, options = {}) {
     searched: false,
     apiError: '',
     currency: 'AUD',
+    noCachedData: false,
+    noCachedDataMessage: '',
     ...options
   });
 }
@@ -198,18 +200,7 @@ function normalizeTravelpayoutsResults(payload, search) {
     });
 }
 
-async function fetchFlightPrices(search) {
-  const cacheKey = getCacheKey(search);
-  const cached = getCachedPrices(cacheKey);
-
-  if (cached) {
-    return { ...cached, cached: true };
-  }
-
-  if (!TP_API_TOKEN) {
-    throw new Error('TP_API_TOKEN missing');
-  }
-
+function buildTravelpayoutsUrl(search) {
   const url = new URL(TRAVELPAYOUTS_API_URL);
   url.searchParams.set('origin', search.origin);
   url.searchParams.set('destination', search.destination);
@@ -223,6 +214,68 @@ async function fetchFlightPrices(search) {
     url.searchParams.set('return_date', search.return_date);
   }
 
+  return url;
+}
+
+function summarizeTravelpayoutsBody(payload, rawBody) {
+  if (!payload || typeof payload !== 'object') {
+    return {
+      type: 'non_json',
+      preview: String(rawBody || '').slice(0, 400)
+    };
+  }
+
+  return {
+    success: typeof payload.success === 'boolean' ? payload.success : undefined,
+    error: payload.error || undefined,
+    dataType: Array.isArray(payload.data) ? 'array' : typeof payload.data,
+    dataCount: Array.isArray(payload.data) ? payload.data.length : undefined,
+    pricesCount: Array.isArray(payload.prices) ? payload.prices.length : undefined,
+    hasErrorsObject: !!payload.errors
+  };
+}
+
+function createDebugInfo(search, url, status, payload, rawBody, cached) {
+  return {
+    endpointUrl: url.toString(),
+    requestParams: {
+      origin: search.origin,
+      destination: search.destination,
+      depart_date: search.depart_date,
+      return_date: search.return_date || '',
+      currency: search.currency,
+      adults: search.adults,
+      show_to_affiliates: 'true',
+      limit: '10',
+      distance: '1'
+    },
+    notes: [
+      'TP_API_TOKEN is sent only in the X-Access-Token header and is never included in this debug output.',
+      'Travelpayouts Data API is cache-based, so empty results can mean no cached data for the route/date.'
+    ],
+    travelpayoutsStatus: status,
+    responseBodySummary: summarizeTravelpayoutsBody(payload, rawBody),
+    cached
+  };
+}
+
+async function fetchFlightPrices(search, options = {}) {
+  const cacheKey = getCacheKey(search);
+  const cached = getCachedPrices(cacheKey);
+  const url = buildTravelpayoutsUrl(search);
+
+  if (cached) {
+    const response = { ...cached, cached: true };
+    if (options.debug) {
+      response.debug = createDebugInfo(search, url, 200, { prices: cached.results }, '', true);
+    }
+    return response;
+  }
+
+  if (!TP_API_TOKEN) {
+    throw new Error('TP_API_TOKEN missing');
+  }
+
   const response = await fetch(url, {
     headers: {
       'X-Access-Token': TP_API_TOKEN,
@@ -230,17 +283,39 @@ async function fetchFlightPrices(search) {
       'Accept-Encoding': 'gzip, deflate'
     }
   });
+  const rawBody = await response.text();
+  let payload = null;
 
-  if (!response.ok) {
-    throw new Error(`Travelpayouts API returned ${response.status}`);
+  try {
+    payload = rawBody ? JSON.parse(rawBody) : null;
+  } catch (error) {
+    payload = null;
   }
 
-  const payload = await response.json();
+  const debug = createDebugInfo(search, url, response.status, payload, rawBody, false);
+
+  if (!response.ok) {
+    const error = new Error(`Travelpayouts API returned ${response.status}`);
+    error.status = response.status;
+    error.debug = debug;
+    throw error;
+  }
+
   const results = normalizeTravelpayoutsResults(payload, search);
-  const responsePayload = { results, fetchedAt: new Date().toISOString() };
+  const noCachedData = results.length === 0;
+  const responsePayload = {
+    results,
+    fetchedAt: new Date().toISOString(),
+    noCachedData,
+    message: noCachedData ? 'No cached Travelpayouts data found for this route and date.' : ''
+  };
   setCachedPrices(cacheKey, responsePayload);
 
-  return { ...responsePayload, cached: false };
+  return {
+    ...responsePayload,
+    cached: false,
+    ...(options.debug ? { debug } : {})
+  };
 }
 
 app.get('/health', (req, res) => {
@@ -269,6 +344,7 @@ app.get('/api/flight-prices', async (req, res) => {
   const search = normalizeSearch(req.query);
   const errors = validateSearch(search);
   const fallbackUrl = buildAviasalesUrl(search);
+  const debugEnabled = req.query.debug === '1';
 
   if (errors.length > 0) {
     return res.status(400).json({
@@ -280,18 +356,24 @@ app.get('/api/flight-prices', async (req, res) => {
   }
 
   try {
-    const data = await fetchFlightPrices(search);
+    const data = await fetchFlightPrices(search, { debug: debugEnabled });
     return res.json({
       success: true,
       ...data,
       fallbackUrl
     });
   } catch (error) {
+    const isMissingToken = error.message === 'TP_API_TOKEN missing';
+    const message = isMissingToken
+      ? 'Travelpayouts API token is not configured.'
+      : 'Travelpayouts API request failed. Use the Aviasales fallback search.';
+
     return res.status(502).json({
       success: false,
-      error: 'Flight price lookup is temporarily unavailable.',
+      error: message,
       results: [],
-      fallbackUrl
+      fallbackUrl,
+      ...(debugEnabled && error.debug ? { debug: error.debug } : {})
     });
   }
 });
@@ -333,7 +415,9 @@ app.get('/flight-deal-finder', async (req, res) => {
       results: data.results,
       currency: search.currency,
       fallbackUrl,
-      cached: data.cached
+      cached: data.cached,
+      noCachedData: data.noCachedData,
+      noCachedDataMessage: data.message
     });
   } catch (error) {
     return renderPage(res, 'flight-deal-finder', {
@@ -343,7 +427,7 @@ app.get('/flight-deal-finder', async (req, res) => {
       results: [],
       currency: search.currency,
       fallbackUrl,
-      apiError: 'Flight price lookup is temporarily unavailable.'
+      apiError: 'Travelpayouts API request failed. Use the Aviasales fallback search.'
     });
   }
 });

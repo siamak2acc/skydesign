@@ -77,7 +77,7 @@
       </div>
     <% } else { %>
       <div class="empty-state">
-        <strong>No cached Travelpayouts prices found for this search.</strong>
+        <strong><%= noCachedDataMessage || 'No cached Travelpayouts prices found for this search.' %></strong>
         <span>You can still continue to Aviasales affiliate search.</span>
         <% if (fallbackUrl) { %>
           <a class="button button-primary" href="<%= fallbackUrl %>" rel="nofollow sponsored">Search on Aviasales</a>
