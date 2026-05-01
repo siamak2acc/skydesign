@@ -1,0 +1,25 @@
+Options -Indexes
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  RewriteCond %{HTTP_HOST} ^www\.skydesign\.com\.au$ [NC]
+  RewriteRule ^(.*)$ https://skydesign.com.au/$1 [L,R=301]
+
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^(.*)$ https://skydesign.com.au/$1 [L,R=301]
+
+  RewriteCond %{THE_REQUEST} \s/+(.+?)\.html[\s?] [NC]
+  RewriteRule ^(.+)\.html$ /$1/ [L,R=301]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{DOCUMENT_ROOT}/$1/index.html -f
+  RewriteRule ^(.+?)/?$ /$1/index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

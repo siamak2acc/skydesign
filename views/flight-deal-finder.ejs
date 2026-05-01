@@ -3,20 +3,37 @@
 <section class="page-hero compact">
   <p class="eyebrow">Flight Deal Finder</p>
   <h1>Search for a flight deal</h1>
-  <p>Enter a route and dates to generate the current server-side affiliate redirect placeholder.</p>
+  <p>Enter IATA airport codes and dates. SkyDesign builds the Aviasales affiliate link on the server and redirects you without exposing any API keys.</p>
 </section>
 
 <section class="tool-shell">
   <%- include('partials/search-form') %>
 
-  <% if (typeof affiliateUrl !== 'undefined' && affiliateUrl) { %>
-    <aside class="result-panel" aria-live="polite">
-      <p class="eyebrow">Redirect generated</p>
-      <h2>Affiliate placeholder URL</h2>
-      <p>This URL is generated on the server and can later be replaced with Skyscanner or affiliate API logic.</p>
-      <a class="result-url" href="<%= affiliateUrl %>" rel="nofollow sponsored"><%= affiliateUrl %></a>
-      <a class="button button-primary" href="<%= affiliateUrl %>" rel="nofollow sponsored">Continue to partner</a>
-    </aside>
+  <aside class="result-panel">
+    <p class="eyebrow">Travelpayouts</p>
+    <h2>Redirect-based search</h2>
+    <p>Submissions are converted into Aviasales search links with your Travelpayouts marker added server-side.</p>
+    <ul class="check-list">
+      <li>No frontend API keys</li>
+      <li>No dependency on unknown scripts</li>
+      <li>Ready for future partner logic</li>
+    </ul>
+  </aside>
+</section>
+
+<section class="widget-section">
+  <div class="section-header">
+    <p class="eyebrow">Optional widget</p>
+    <h2>Controlled Travelpayouts embed</h2>
+    <p>Set `TP_WIDGET_EMBED_URL` to a trusted Travelpayouts or Aviasales widget URL to render an iframe here. Leave it empty to keep the page script-free.</p>
+  </div>
+  <% if (widgetEmbedUrl) { %>
+    <iframe class="travel-widget" src="<%= widgetEmbedUrl %>" title="Travelpayouts flight widget" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+  <% } else { %>
+    <div class="widget-placeholder">
+      <strong>Widget disabled</strong>
+      <span>No widget URL is configured.</span>
+    </div>
   <% } %>
 </section>
 

@@ -129,7 +129,8 @@ a {
 .tool-shell,
 .content-grid,
 .text-section,
-.contact-panel {
+.contact-panel,
+.widget-section {
   width: min(1120px, calc(100% - 36px));
   margin-inline: auto;
 }
@@ -293,7 +294,8 @@ h3 {
 .content-grid article,
 .result-panel,
 .contact-panel,
-.tool-shell {
+.tool-shell,
+.widget-placeholder {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #ffffff;
@@ -385,6 +387,56 @@ textarea {
   color: var(--accent-dark);
   font-weight: 800;
   overflow-wrap: anywhere;
+}
+
+.check-list {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.check-list li {
+  position: relative;
+  padding-left: 24px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.check-list li::before {
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  content: "✓";
+}
+
+.widget-section {
+  margin-bottom: 64px;
+}
+
+.travel-widget {
+  display: block;
+  width: 100%;
+  min-height: 420px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.widget-placeholder {
+  display: grid;
+  gap: 6px;
+  min-height: 160px;
+  place-content: center;
+  padding: 28px;
+  color: var(--muted);
+  text-align: center;
+  background: var(--soft);
+}
+
+.widget-placeholder strong {
+  color: var(--ink);
 }
 
 .content-grid,

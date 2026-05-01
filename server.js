@@ -6,9 +6,9 @@ const path = require('path');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-const SITE_URL = process.env.SITE_URL || 'https://skydesign.com.au';
-const AFFILIATE_BASE_URL =
-  process.env.AFFILIATE_BASE_URL || `${SITE_URL.replace(/\/$/, '')}/affiliate-placeholder`;
+const AVIASALES_SEARCH_URL = 'https://search.aviasales.com/flights/';
+const TP_MARKER = process.env.TP_MARKER || '';
+const TP_WIDGET_EMBED_URL = process.env.TP_WIDGET_EMBED_URL || '';
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -18,42 +18,89 @@ app.use(express.static(path.join(__dirname, 'public'), {
   maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0
 }));
 
-const cabinClasses = ['Economy', 'Premium economy', 'Business', 'First'];
-
 function renderPage(res, view, options = {}) {
   res.render(view, {
     activePath: options.activePath || '/',
     pageTitle: options.pageTitle || 'SkyDesign',
     metaDescription: options.metaDescription || 'Find smarter flight deals from Australia.',
-    cabinClasses,
+    widgetEmbedUrl: getTrustedWidgetEmbedUrl(),
     ...options
   });
 }
 
-function buildAffiliateUrl(search) {
-  const url = new URL(AFFILIATE_BASE_URL);
-  url.searchParams.set('utm_source', 'skydesign');
-  url.searchParams.set('utm_medium', 'flight_deal_finder');
-  url.searchParams.set('utm_campaign', 'placeholder_redirect');
-
-  for (const [key, value] of Object.entries(search)) {
-    if (value) {
-      url.searchParams.set(key, String(value).trim());
-    }
+function getTrustedWidgetEmbedUrl() {
+  if (!TP_WIDGET_EMBED_URL) {
+    return '';
   }
+
+  try {
+    const url = new URL(TP_WIDGET_EMBED_URL);
+    const host = url.hostname.toLowerCase();
+    const isTrustedHost =
+      host === 'www.travelpayouts.com' ||
+      host === 'travelpayouts.com' ||
+      host.endsWith('.travelpayouts.com') ||
+      host === 'www.aviasales.com' ||
+      host === 'aviasales.com' ||
+      host.endsWith('.aviasales.com');
+
+    return isTrustedHost ? url.toString() : '';
+  } catch (error) {
+    return '';
+  }
+}
+
+function buildAviasalesUrl(search) {
+  const url = new URL(AVIASALES_SEARCH_URL);
+  url.searchParams.set('marker', TP_MARKER);
+  url.searchParams.set('origin_iata', search.originIata);
+  url.searchParams.set('destination_iata', search.destinationIata);
+  url.searchParams.set('depart_date', search.departDate);
+
+  if (search.returnDate) {
+    url.searchParams.set('return_date', search.returnDate);
+  }
+
+  url.searchParams.set('adults', search.adults);
 
   return url.toString();
 }
 
 function normalizeSearch(body) {
   return {
-    from: body.from || '',
-    to: body.to || '',
-    departureDate: body.departureDate || '',
+    originIata: String(body.originIata || '').trim().toUpperCase(),
+    destinationIata: String(body.destinationIata || '').trim().toUpperCase(),
+    departDate: body.departDate || '',
     returnDate: body.returnDate || '',
-    travellers: body.travellers || '1',
-    cabinClass: body.cabinClass || 'Economy'
+    adults: body.adults || '1'
   };
+}
+
+function validateSearch(search) {
+  const errors = [];
+  const iataPattern = /^[A-Z]{3}$/;
+
+  if (!iataPattern.test(search.originIata)) {
+    errors.push('Enter a valid 3-letter origin IATA code.');
+  }
+
+  if (!iataPattern.test(search.destinationIata)) {
+    errors.push('Enter a valid 3-letter destination IATA code.');
+  }
+
+  if (!search.departDate) {
+    errors.push('Choose a departure date.');
+  }
+
+  if (!/^[1-9]$/.test(String(search.adults))) {
+    errors.push('Adults must be between 1 and 9.');
+  }
+
+  if (!TP_MARKER) {
+    errors.push('Travelpayouts marker is not configured. Set TP_MARKER in the server environment.');
+  }
+
+  return errors;
 }
 
 app.get('/health', (req, res) => {
@@ -81,27 +128,19 @@ app.get('/flight-deal-finder', (req, res) => {
 
 app.post('/flight-deal-finder', (req, res) => {
   const search = normalizeSearch(req.body);
-  const missing = ['from', 'to', 'departureDate'].filter((field) => !search[field]);
+  const errors = validateSearch(search);
 
-  if (missing.length > 0) {
+  if (errors.length > 0) {
     return renderPage(res.status(400), 'flight-deal-finder', {
       activePath: '/flight-deal-finder',
       pageTitle: 'Flight Deal Finder | SkyDesign',
       metaDescription: 'Use the SkyDesign flight deal finder to start a flight search.',
       formValues: search,
-      error: 'Please enter a departure city, destination, and departure date.'
+      error: errors.join(' ')
     });
   }
 
-  const affiliateUrl = buildAffiliateUrl(search);
-
-  return renderPage(res, 'flight-deal-finder', {
-    activePath: '/flight-deal-finder',
-    pageTitle: 'Flight Deal Finder | SkyDesign',
-    metaDescription: 'Use the SkyDesign flight deal finder to start a flight search.',
-    formValues: search,
-    affiliateUrl
-  });
+  return res.redirect(302, buildAviasalesUrl(search));
 });
 
 app.get('/cheap-flights', (req, res) => {

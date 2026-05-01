@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flight Deal Finder | SkyDesign</title>
+  <meta name="description" content="Use the SkyDesign flight deal finder to generate a placeholder affiliate flight search redirect.">
+  <link rel="canonical" href="https://skydesign.com.au/flight-deals/">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/script.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">SkyDesign</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+    <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+      <a href="/">Home</a>
+      <a aria-current="page" href="/flight-deals/">Flight Deal Finder</a>
+      <a href="/cheap-flights/">Cheap Flights</a>
+      <a href="/about/">About</a>
+      <a href="/contact/">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <p class="eyebrow">Flight Deal Finder</p>
+      <h1>Search flight deal ideas</h1>
+      <p>Enter your trip details to generate a placeholder affiliate redirect URL. Live airline or affiliate API logic can be connected later through a secure backend.</p>
+    </section>
+
+    <section class="finder-layout">
+      <form class="search-form" id="flight-search-form">
+        <div class="field-grid">
+          <label>
+            <span>From</span>
+            <input name="from" type="text" placeholder="Sydney or SYD" autocomplete="off" required>
+          </label>
+          <label>
+            <span>To</span>
+            <input name="to" type="text" placeholder="Tokyo or NRT" autocomplete="off" required>
+          </label>
+          <label>
+            <span>Departure date</span>
+            <input name="departureDate" type="date" required>
+          </label>
+          <label>
+            <span>Return date</span>
+            <input name="returnDate" type="date">
+          </label>
+          <label>
+            <span>Travellers</span>
+            <input name="travellers" type="number" min="1" max="9" value="1">
+          </label>
+          <label>
+            <span>Cabin class</span>
+            <select name="cabinClass">
+              <option>Economy</option>
+              <option>Premium economy</option>
+              <option>Business</option>
+              <option>First</option>
+            </select>
+          </label>
+        </div>
+        <button class="button primary" type="submit">Generate redirect</button>
+      </form>
+
+      <aside class="result-panel" aria-live="polite">
+        <p class="eyebrow">Affiliate placeholder</p>
+        <h2>Redirect URL</h2>
+        <p>The generated URL is a placeholder only. Do not put private API keys or partner secrets in frontend JavaScript.</p>
+        <a class="result-url" id="affiliate-result" href="#" hidden rel="nofollow sponsored"></a>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>SkyDesign Flight Deal Finder</span>
+    <a href="/sitemap.xml">Sitemap</a>
+  </footer>
+</body>
+</html>

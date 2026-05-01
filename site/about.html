@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About | SkyDesign Flight Deal Finder</title>
+  <meta name="description" content="About SkyDesign Flight Deal Finder and the static-first deployment approach.">
+  <link rel="canonical" href="https://skydesign.com.au/about/">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/script.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">SkyDesign</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+    <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+      <a href="/">Home</a>
+      <a href="/flight-deals/">Flight Deal Finder</a>
+      <a href="/cheap-flights/">Cheap Flights</a>
+      <a aria-current="page" href="/about/">About</a>
+      <a href="/contact/">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <p class="eyebrow">About</p>
+      <h1>A static-first travel discovery site</h1>
+      <p>SkyDesign Flight Deal Finder is built for fast static hosting today and secure affiliate or API integrations later.</p>
+    </section>
+
+    <section class="text-section">
+      <h2>Deployment approach</h2>
+      <p>The site is authored as static HTML, CSS, and JavaScript, then built locally into clean URL folders and uploaded to Hostinger public_html over FTP. Cloudflare remains responsible for DNS.</p>
+      <p>When live pricing or partner APIs are added, secrets should stay in a backend helper, serverless function, or private API service. The static frontend should never contain API keys.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>SkyDesign Flight Deal Finder</span>
+    <a href="/sitemap.xml">Sitemap</a>
+  </footer>
+</body>
+</html>
