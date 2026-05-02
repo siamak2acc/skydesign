@@ -7,7 +7,9 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 const AVIASALES_PRICES_FOR_DATES_URL = 'https://api.travelpayouts.com/aviasales/v3/prices_for_dates';
-const AVIASALES_SEARCH_URL = 'https://search.aviasales.com/flights/';
+const TP_PARTNER_BASE = 'https://tp.media/r';
+const TP_PARTNER_PROGRAM = '4114';
+const AVIASALES_EN_URL = 'https://www.aviasales.com/';
 const TP_MARKER = process.env.TP_MARKER || '';
 const TP_API_TOKEN = process.env.TP_API_TOKEN || '';
 const TP_WIDGET_EMBED_URL = process.env.TP_WIDGET_EMBED_URL || '';
@@ -63,27 +65,18 @@ function getTrustedWidgetEmbedUrl() {
   }
 }
 
-function buildAviasalesSearchUrl(search) {
-  const url = new URL(AVIASALES_SEARCH_URL);
+function buildTravelpayoutsPartnerUrl(params) {
+  const target = new URL(AVIASALES_EN_URL);
+  target.searchParams.set('locale', 'en-us');
+  target.searchParams.set('market', 'us');
+  target.searchParams.set('currency', (params && params.currency) || 'AUD');
+
+  const url = new URL(TP_PARTNER_BASE);
   if (TP_MARKER) {
     url.searchParams.set('marker', TP_MARKER);
   }
-
-  url.searchParams.set('origin_iata', search.origin);
-  url.searchParams.set('destination_iata', search.destination);
-  url.searchParams.set('depart_date', search.depart_date);
-
-  if (search.return_date) {
-    url.searchParams.set('return_date', search.return_date);
-  }
-
-  url.searchParams.set('adults', search.adults || '1');
-  url.searchParams.set('children', '0');
-  url.searchParams.set('infants', '0');
-  url.searchParams.set('trip_class', '0');
-  url.searchParams.set('one_way', search.return_date ? 'false' : 'true');
-  url.searchParams.set('locale', 'en');
-  url.searchParams.set('lang', 'en');
+  url.searchParams.set('p', TP_PARTNER_PROGRAM);
+  url.searchParams.set('u', target.toString());
 
   return url.toString();
 }
@@ -196,7 +189,8 @@ function normalizeTravelpayoutsResults(payload, search) {
         destination: item.destination || search.destination,
         depart_date: formatApiDate(item.departure_at || item.depart_date || search.depart_date),
         return_date: formatApiDate(item.return_at || item.return_date || search.return_date),
-        adults: search.adults
+        adults: search.adults,
+        currency: search.currency
       };
 
       return {
@@ -213,7 +207,7 @@ function normalizeTravelpayoutsResults(payload, search) {
         gate: item.gate || item.gate_id || '',
         foundAt: item.found_at || '',
         expiresAt: item.expires_at || '',
-        dealUrl: buildAviasalesSearchUrl(resultSearch)
+        dealUrl: buildTravelpayoutsPartnerUrl(resultSearch)
       };
     });
 }
@@ -443,7 +437,7 @@ app.get('/env-check', (req, res) => {
 
 app.get('/debug-aviasales-link', (req, res) => {
   const search = normalizeSearch(req.query);
-  return res.json({ url: buildAviasalesSearchUrl(search) });
+  return res.json({ url: buildTravelpayoutsPartnerUrl(search) });
 });
 
 app.get('/', (req, res) => {
@@ -457,7 +451,7 @@ app.get('/', (req, res) => {
 app.get('/api/flight-prices', async (req, res) => {
   const search = normalizeSearch(req.query);
   const errors = validateSearch(search);
-  const fallbackUrl = buildAviasalesSearchUrl(search);
+  const fallbackUrl = buildTravelpayoutsPartnerUrl(search);
   const debugEnabled = req.query.debug === '1';
 
   if (errors.length > 0) {
@@ -499,7 +493,7 @@ app.get('/flight-deal-finder', async (req, res) => {
     ['origin', 'destination', 'depart_date', 'return_date', 'currency', 'adults'].includes(key)
   );
   const search = normalizeSearch(req.query);
-  const fallbackUrl = hasSearch ? buildAviasalesSearchUrl(search) : '';
+  const fallbackUrl = hasSearch ? buildTravelpayoutsPartnerUrl(search) : '';
   const baseOptions = {
     activePath: '/flight-deal-finder',
     pageTitle: 'Flight Deal Finder | SkyDesign',
@@ -561,12 +555,12 @@ app.post('/flight-deal-finder', (req, res) => {
       pageTitle: 'Flight Deal Finder | SkyDesign',
       metaDescription: 'Use the SkyDesign flight deal finder to start a flight search.',
       formValues: search,
-      fallbackUrl: buildAviasalesSearchUrl(search),
+      fallbackUrl: buildTravelpayoutsPartnerUrl(search),
       error: errors.join(' ')
     });
   }
 
-  return res.redirect(302, buildAviasalesSearchUrl(search));
+  return res.redirect(302, buildTravelpayoutsPartnerUrl(search));
 });
 
 app.get('/cheap-flights', (req, res) => {
