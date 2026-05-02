@@ -1,125 +1,47 @@
 <%- include('partials/head') %>
 
-<section class="home-hero">
-  <div class="home-hero-inner">
-    <h1 class="home-hero-title">Find cheap flight deals from Australia</h1>
-    <p class="home-hero-lead">Search cached fares, compare popular routes, and continue to live Aviasales search when no cached price is available.</p>
-    <div class="home-search-card">
-      <%- include('partials/search-form', {
-        formAction: '/flight-deal-finder',
-        formMethod: 'get',
-        formClass: 'home-search-form',
-        buttonText: 'Search flight deals'
-      }) %>
+<section class="hero">
+  <div class="hero-content">
+    <p class="eyebrow">skydesign.com.au</p>
+    <h1>SkyDesign Flight Deal Finder</h1>
+    <p class="hero-copy">Start a flight search, capture route details, and send travellers through a server-side Aviasales affiliate redirect with your Travelpayouts marker included.</p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="/flight-deal-finder">Search flights</a>
+      <a class="button button-secondary" href="/cheap-flights">Cheap flight tips</a>
     </div>
   </div>
-</section>
-
-<section class="band">
-  <div class="section-header">
-    <p class="eyebrow">Popular flight deals</p>
-    <h2>Start with common routes from Australia</h2>
-  </div>
-  <div class="popular-route-grid">
-    <article class="popular-route-card">
-      <h3>Sydney to Bali</h3>
-      <p>Search cached fares from Sydney to Denpasar for beach holidays and flexible travel dates.</p>
-      <a class="button button-secondary" href="/flight-deal-finder?origin=SYD&destination=DPS&depart_date=2026-06&return_date=2026-07&adults=1&currency=AUD">Search deals</a>
-    </article>
-    <article class="popular-route-card">
-      <h3>Sydney to Melbourne</h3>
-      <p>Compare short-hop domestic fares between Australia's busiest city pair.</p>
-      <a class="button button-secondary" href="/flight-deal-finder?origin=SYD&destination=MEL&depart_date=2026-06&return_date=2026-07&adults=1&currency=AUD">Search deals</a>
-    </article>
-    <article class="popular-route-card">
-      <h3>Sydney to Dubai</h3>
-      <p>Look for cached long-haul fares and one-stop options from Sydney to Dubai.</p>
-      <a class="button button-secondary" href="/flight-deal-finder?origin=SYD&destination=DXB&depart_date=2026-06&return_date=2026-07&adults=1&currency=AUD">Search deals</a>
-    </article>
-    <article class="popular-route-card">
-      <h3>Melbourne to Bali</h3>
-      <p>Find cached Bali fare ideas from Melbourne for popular holiday periods.</p>
-      <a class="button button-secondary" href="/flight-deal-finder?origin=MEL&destination=DPS&depart_date=2026-06&return_date=2026-07&adults=1&currency=AUD">Search deals</a>
-    </article>
-    <article class="popular-route-card">
-      <h3>Melbourne to Singapore</h3>
-      <p>Search cached fares to Singapore for stopovers, business trips, and holidays.</p>
-      <a class="button button-secondary" href="/flight-deal-finder?origin=MEL&destination=SIN&depart_date=2026-06&return_date=2026-07&adults=1&currency=AUD">Search deals</a>
-    </article>
-    <article class="popular-route-card">
-      <h3>Sydney to Bangkok</h3>
-      <p>Explore cached Thailand fares from Sydney and continue to live search when needed.</p>
-      <a class="button button-secondary" href="/flight-deal-finder?origin=SYD&destination=BKK&depart_date=2026-06&return_date=2026-07&adults=1&currency=AUD">Search deals</a>
-    </article>
+  <div class="hero-visual" aria-hidden="true">
+    <div class="route-card">
+      <span>SYD</span>
+      <div class="route-line"></div>
+      <span>NRT</span>
+    </div>
+    <div class="deal-ticket">
+      <span>Deal watch</span>
+      <strong>Flexible dates</strong>
+    </div>
   </div>
 </section>
 
 <section class="band">
   <div class="section-header">
     <p class="eyebrow">How it works</p>
-    <h2>Three steps to smarter flight search</h2>
+    <h2>Built for affiliate flight discovery</h2>
   </div>
-  <div class="steps-grid">
-    <div class="step-card">
-      <div class="step-num">1</div>
-      <h3>Enter your route</h3>
-      <p>Enter origin, destination, and travel dates. SkyDesign queries cached fare data from the Travelpayouts API.</p>
-    </div>
-    <div class="step-card">
-      <div class="step-num">2</div>
-      <h3>Review deal cards</h3>
-      <p>Cached fares appear as deal cards showing price, airline, and dates. Compare options before deciding where to book.</p>
-    </div>
-    <div class="step-card">
-      <div class="step-num">3</div>
-      <h3>Continue to live search</h3>
-      <p>Click View Deal or the fallback link to open a live Aviasales search for your exact route, always in English.</p>
-    </div>
-  </div>
-</section>
-
-<section class="seo-section">
-  <div class="section-header">
-    <p class="eyebrow">Cheap flights from Australia</p>
-    <h2>Search smarter before you book</h2>
-  </div>
-  <div class="seo-grid">
-    <article>
-      <h3>Cheap flights from Australia</h3>
-      <p>SkyDesign helps Australian travellers start with cached fare data, then move to live affiliate search for current availability and final pricing.</p>
+  <div class="feature-grid">
+    <article class="feature-card">
+      <h3>Server-rendered search</h3>
+      <p>The form posts to Express, keeping future API credentials and affiliate logic off the frontend.</p>
     </article>
-    <article>
-      <h3>Popular destinations</h3>
-      <p>Start with Bali, Melbourne, Dubai, Singapore, and Bangkok, then adjust dates to compare fare patterns.</p>
+    <article class="feature-card">
+      <h3>Aviasales redirect</h3>
+      <p>Submitted IATA codes and dates are encoded into an Aviasales search URL with the Travelpayouts marker added on the server.</p>
     </article>
-    <article>
-      <h3>How SkyDesign flight search works</h3>
-      <p>The app asks the backend for cached Travelpayouts prices. If cached fares exist, they appear as deal cards on the results page.</p>
-    </article>
-    <article>
-      <h3>Cached prices note</h3>
-      <p>Travelpayouts data is cache-based. Empty results are normal, so SkyDesign always keeps a live Aviasales fallback search available.</p>
+    <article class="feature-card">
+      <h3>Hostinger ready</h3>
+      <p>The app runs on Node 20 with `npm start`, includes a `/health` endpoint, and needs no build step.</p>
     </article>
   </div>
-</section>
-
-<section class="faq-section">
-  <div class="section-header">
-    <p class="eyebrow">FAQ</p>
-    <h2>Flight search questions</h2>
-  </div>
-  <details>
-    <summary>Are cached prices final booking prices?</summary>
-    <p>No. Cached prices are useful fare signals, but final price and availability are confirmed on the booking partner's live search page.</p>
-  </details>
-  <details>
-    <summary>What happens when no cached price is available?</summary>
-    <p>SkyDesign shows the message: No cached price is available for this exact route/date. Continue to live search for the latest fares.</p>
-  </details>
-  <details>
-    <summary>Are API keys exposed in the browser?</summary>
-    <p>No. Travelpayouts API requests run through the Express backend. The frontend receives only sanitized results and affiliate links.</p>
-  </details>
 </section>
 
 <%- include('partials/footer') %>
