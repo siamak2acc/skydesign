@@ -71,7 +71,7 @@ X-Access-Token: process.env.TP_API_TOKEN
 
 The token is not logged and is not returned in any route response.
 
-Price results are cached in memory for 24 hours by search parameters. If Travelpayouts has no cached result, the UI shows: `No cached price is available for this exact route/date. Continue to live search for the latest fares.` The Aviasales fallback link uses `TP_MARKER`.
+Price results are cached in memory for 24 hours by search parameters. If Travelpayouts has no cached result, the UI shows: `No cached price found for this exact route/date. Continue to live search.` The Aviasales fallback link uses `TP_MARKER`.
 
 ## Local Setup
 

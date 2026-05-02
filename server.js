@@ -30,11 +30,9 @@ function renderPage(res, view, options = {}) {
     widgetEmbedUrl: getTrustedWidgetEmbedUrl(),
     fallbackUrl: '',
     results: [],
-    popularResults: [],
     searched: false,
     apiError: '',
     currency: 'AUD',
-    fetchedAt: '',
     noCachedData: false,
     noCachedDataMessage: '',
     ...options
@@ -359,7 +357,7 @@ async function fetchFlightPrices(search, options = {}) {
   if (cached) {
     const response = { ...cached, cached: true };
     if (options.debug) {
-      response.debug = createDebugInfo(search, firstUrl, 200, { data: cached.results || [] }, '', true);
+      response.debug = createDebugInfo(search, firstUrl, 200, { data: cached.results }, '', true);
     }
     return response;
   }
@@ -370,7 +368,6 @@ async function fetchFlightPrices(search, options = {}) {
 
   const debugAttempts = [];
   let results = [];
-  let popularResults = [];
 
   for (const attempt of buildSearchAttempts(search)) {
     let data;
@@ -393,13 +390,8 @@ async function fetchFlightPrices(search, options = {}) {
       ...data.debug
     });
 
-    if (data.results.length > 0 && attempt.label === 'exact') {
+    if (data.results.length > 0) {
       results = data.results;
-      break;
-    }
-
-    if (data.results.length > 0 && attempt.label === 'month') {
-      popularResults = data.results;
       break;
     }
   }
@@ -407,10 +399,9 @@ async function fetchFlightPrices(search, options = {}) {
   const noCachedData = results.length === 0;
   const responsePayload = {
     results,
-    popularResults,
     fetchedAt: new Date().toISOString(),
     noCachedData,
-    message: noCachedData ? 'No cached price is available for this exact route/date. Continue to live search for the latest fares.' : ''
+    message: noCachedData ? 'No cached price found for this exact route/date. Continue to live search.' : ''
   };
   setCachedPrices(cacheKey, responsePayload);
 
@@ -438,8 +429,8 @@ app.get('/env-check', (req, res) => {
 app.get('/', (req, res) => {
   renderPage(res, 'home', {
     activePath: '/',
-    pageTitle: 'SkyDesign Flight Deals Australia | Find Cheap Flights',
-    metaDescription: 'Search cheap flight deals from Australia, compare cached fares, and continue to live flight search with SkyDesign.'
+    pageTitle: 'SkyDesign Flight Deal Finder',
+    metaDescription: 'Search flexible flight deal ideas and compare cheap flights from Australia.'
   });
 });
 
@@ -454,7 +445,6 @@ app.get('/api/flight-prices', async (req, res) => {
       success: false,
       errors,
       results: [],
-      popularResults: [],
       fallbackUrl
     });
   }
@@ -476,7 +466,6 @@ app.get('/api/flight-prices', async (req, res) => {
       success: false,
       error: message,
       results: [],
-      popularResults: [],
       fallbackUrl,
       ...(debugEnabled && error.debug ? { debug: error.debug } : {})
     });
@@ -518,9 +507,7 @@ app.get('/flight-deal-finder', async (req, res) => {
       searched: true,
       formValues: search,
       results: data.results,
-      popularResults: data.popularResults || [],
       currency: search.currency,
-      fetchedAt: data.fetchedAt,
       fallbackUrl,
       cached: data.cached,
       noCachedData: data.noCachedData,
@@ -532,7 +519,6 @@ app.get('/flight-deal-finder', async (req, res) => {
       searched: true,
       formValues: search,
       results: [],
-      popularResults: [],
       currency: search.currency,
       fallbackUrl,
       apiError: 'Travelpayouts API request failed. Use the Aviasales fallback search.'

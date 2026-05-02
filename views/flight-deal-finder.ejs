@@ -3,7 +3,7 @@
 <section class="page-hero compact">
   <p class="eyebrow">Flight Deal Finder</p>
   <h1>Search for a flight deal</h1>
-  <p>Enter IATA airport codes and dates. SkyDesign checks Travelpayouts server-side, keeps API tokens private, and falls back to Aviasales affiliate search when cached prices are unavailable.</p>
+  <p>Enter IATA airport codes and dates. SkyDesign checks Travelpayouts server-side, keeps API tokens private, and falls back to Aviasales affiliate search when live prices are unavailable.</p>
 </section>
 
 <section class="tool-shell">
@@ -15,7 +15,7 @@
     <p>Flight prices are requested by the Express backend using the Travelpayouts API token in the `X-Access-Token` header.</p>
     <ul class="check-list">
       <li>Token never reaches frontend code</li>
-      <li>Cached data is normal, not guaranteed</li>
+      <li>Results are cached for 24 hours</li>
       <li>Affiliate fallback remains available</li>
     </ul>
     <% if (fallbackUrl) { %>
@@ -28,11 +28,11 @@
   <section class="deals-section">
     <div class="section-header">
       <p class="eyebrow">Results</p>
-      <h2>Cached flight prices</h2>
+      <h2>Flight price results</h2>
       <% if (typeof cached !== 'undefined' && cached) { %>
         <p>Showing cached results from the last 24 hours.</p>
       <% } else { %>
-        <p>Cached prices may change when you continue to the booking partner.</p>
+        <p>Prices are cached and may change when you continue to the booking partner.</p>
       <% } %>
     </div>
 
@@ -47,34 +47,44 @@
     <% } else if (results && results.length) { %>
       <div class="deal-grid">
         <% results.forEach((deal) => { %>
-          <%- include('partials/deal-card', { deal, fetchedAt }) %>
+          <article class="deal-card">
+            <div>
+              <p class="route-code"><%= deal.origin %> → <%= deal.destination %></p>
+              <h3><%= deal.currency %> <%= Number(deal.price).toLocaleString('en-AU') %></h3>
+              <p><%= deal.departDate %><%= deal.returnDate ? ` to ${deal.returnDate}` : '' %></p>
+            </div>
+            <dl>
+              <div>
+                <dt>Stops</dt>
+                <dd><%= typeof deal.transfers === 'number' ? deal.transfers : 'Any' %></dd>
+              </div>
+              <% if (deal.airline) { %>
+                <div>
+                  <dt>Airline</dt>
+                  <dd><%= deal.airline %></dd>
+                </div>
+              <% } %>
+              <% if (deal.gate) { %>
+                <div>
+                  <dt>Gate</dt>
+                  <dd><%= deal.gate %></dd>
+                </div>
+              <% } %>
+            </dl>
+            <a class="button button-primary" href="<%= deal.dealUrl %>" rel="nofollow sponsored">View Deal</a>
+          </article>
         <% }) %>
       </div>
     <% } else { %>
       <div class="empty-state">
-        <strong><%= noCachedDataMessage || 'No cached price is available for this exact route/date. Continue to live search for the latest fares.' %></strong>
-        <span>Travelpayouts cached data can be empty for specific routes and dates. Live Aviasales search can still show current fares.</span>
+        <strong><%= noCachedDataMessage || 'No cached Travelpayouts prices found for this search.' %></strong>
+        <span>You can still continue to Aviasales affiliate search.</span>
         <% if (fallbackUrl) { %>
           <a class="button button-primary" href="<%= fallbackUrl %>" rel="nofollow sponsored">Search on Aviasales</a>
         <% } %>
       </div>
     <% } %>
   </section>
-
-  <% if (popularResults && popularResults.length) { %>
-    <section class="deals-section popular-deals-section">
-      <div class="section-header">
-        <p class="eyebrow">Popular cached deals</p>
-        <h2>Broader month-level options</h2>
-        <p>No exact cached match was found, but these cached fares were found from a broader month-level Travelpayouts search.</p>
-      </div>
-      <div class="deal-grid">
-        <% popularResults.forEach((deal) => { %>
-          <%- include('partials/deal-card', { deal, fetchedAt }) %>
-        <% }) %>
-      </div>
-    </section>
-  <% } %>
 <% } %>
 
 <%- include('partials/footer') %>
