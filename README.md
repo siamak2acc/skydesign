@@ -55,7 +55,15 @@ currency
 adults
 ```
 
-The server calls the Travelpayouts Data API with:
+The server calls the Aviasales Data API endpoint recommended for specific dates:
+
+```text
+https://api.travelpayouts.com/aviasales/v3/prices_for_dates
+```
+
+It first searches the exact `YYYY-MM-DD` date when provided. If no cached deal is found for an exact date, it retries with month-level `YYYY-MM` dates.
+
+The API token is sent with:
 
 ```text
 X-Access-Token: process.env.TP_API_TOKEN
@@ -63,7 +71,7 @@ X-Access-Token: process.env.TP_API_TOKEN
 
 The token is not logged and is not returned in any route response.
 
-Price results are cached in memory for 24 hours by search parameters. If Travelpayouts fails or returns no results, the UI shows a clean Aviasales fallback link using `TP_MARKER`.
+Price results are cached in memory for 24 hours by search parameters. If Travelpayouts has no cached result, the UI shows: `No cached price found for this exact route/date. Continue to live search.` The Aviasales fallback link uses `TP_MARKER`.
 
 ## Local Setup
 
@@ -109,7 +117,7 @@ For backend diagnostics, call:
 /api/flight-prices?origin=SYD&destination=DXB&depart_date=2026-06-01&return_date=2026-06-10&currency=AUD&adults=1&debug=1
 ```
 
-Debug output includes the Travelpayouts endpoint URL without token, sanitized request params, upstream HTTP status, and a response body summary. It never includes `TP_API_TOKEN`.
+Debug output includes the Travelpayouts endpoint URL without token, sanitized request params, upstream HTTP status, response body summary, and exact/month attempt details. It never includes `TP_API_TOKEN`.
 
 ## Safe Future Changes
 

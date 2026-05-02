@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-const TRAVELPAYOUTS_API_URL = 'https://api.travelpayouts.com/v2/prices/nearest-places-matrix';
+const AVIASALES_PRICES_FOR_DATES_URL = 'https://api.travelpayouts.com/aviasales/v3/prices_for_dates';
 const AVIASALES_SEARCH_URL = 'https://search.aviasales.com/flights/';
 const TP_MARKER = process.env.TP_MARKER || '';
 const TP_API_TOKEN = process.env.TP_API_TOKEN || '';
@@ -94,7 +94,7 @@ function normalizeSearch(body) {
 function validateSearch(search, options = {}) {
   const errors = [];
   const iataPattern = /^[A-Z]{3}$/;
-  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  const datePattern = /^\d{4}-\d{2}(?:-\d{2})?$/;
 
   if (!iataPattern.test(search.origin)) {
     errors.push('Enter a valid 3-letter origin IATA code.');
@@ -164,10 +164,18 @@ function setCachedPrices(cacheKey, payload) {
   });
 }
 
+function toMonth(dateValue) {
+  return String(dateValue || '').slice(0, 7);
+}
+
+function isExactDate(dateValue) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(dateValue || ''));
+}
+
 function normalizeTravelpayoutsResults(payload, search) {
-  const sourceResults = Array.isArray(payload.prices)
+  const sourceResults = Array.isArray(payload?.prices)
     ? payload.prices
-    : Array.isArray(payload.data)
+    : Array.isArray(payload?.data)
       ? payload.data
       : [];
 
@@ -178,8 +186,8 @@ function normalizeTravelpayoutsResults(payload, search) {
       const resultSearch = {
         origin: item.origin || search.origin,
         destination: item.destination || search.destination,
-        depart_date: item.depart_date || search.depart_date,
-        return_date: item.return_date || search.return_date,
+        depart_date: formatApiDate(item.departure_at || item.depart_date || search.depart_date),
+        return_date: formatApiDate(item.return_at || item.return_date || search.return_date),
         adults: search.adults
       };
 
@@ -193,25 +201,39 @@ function normalizeTravelpayoutsResults(payload, search) {
         currency: search.currency,
         transfers: typeof item.number_of_changes === 'number' ? item.number_of_changes : item.transfers,
         airline: item.airline || '',
-        gate: item.gate || '',
+        flightNumber: item.flight_number || '',
+        gate: item.gate || item.gate_id || '',
         foundAt: item.found_at || '',
+        expiresAt: item.expires_at || '',
         dealUrl: buildAviasalesUrl(resultSearch)
       };
     });
 }
 
-function buildTravelpayoutsUrl(search) {
-  const url = new URL(TRAVELPAYOUTS_API_URL);
+function formatApiDate(dateValue) {
+  if (!dateValue) {
+    return '';
+  }
+
+  return String(dateValue).slice(0, 10);
+}
+
+function buildTravelpayoutsUrl(search, overrides = {}) {
+  const url = new URL(AVIASALES_PRICES_FOR_DATES_URL);
   url.searchParams.set('origin', search.origin);
   url.searchParams.set('destination', search.destination);
-  url.searchParams.set('depart_date', search.depart_date);
-  url.searchParams.set('currency', search.currency);
-  url.searchParams.set('show_to_affiliates', 'true');
-  url.searchParams.set('limit', '10');
-  url.searchParams.set('distance', '1');
+  url.searchParams.set('departure_at', overrides.departure_at || search.depart_date);
+  url.searchParams.set('cy', search.currency.toLowerCase());
+  url.searchParams.set('limit', '30');
+  url.searchParams.set('sorting', 'price');
+  url.searchParams.set('direct', 'false');
+  url.searchParams.set('unique', 'false');
+  url.searchParams.set('one_way', search.return_date ? 'false' : 'true');
+  url.searchParams.set('page', '1');
 
-  if (search.return_date) {
-    url.searchParams.set('return_date', search.return_date);
+  const returnAt = overrides.return_at || search.return_date;
+  if (returnAt) {
+    url.searchParams.set('return_at', returnAt);
   }
 
   return url;
@@ -241,17 +263,18 @@ function createDebugInfo(search, url, status, payload, rawBody, cached) {
     requestParams: {
       origin: search.origin,
       destination: search.destination,
-      depart_date: search.depart_date,
-      return_date: search.return_date || '',
-      currency: search.currency,
+      departure_at: url.searchParams.get('departure_at'),
+      return_at: url.searchParams.get('return_at') || '',
+      cy: url.searchParams.get('cy'),
       adults: search.adults,
-      show_to_affiliates: 'true',
-      limit: '10',
-      distance: '1'
+      limit: url.searchParams.get('limit'),
+      sorting: url.searchParams.get('sorting'),
+      direct: url.searchParams.get('direct'),
+      unique: url.searchParams.get('unique')
     },
     notes: [
       'TP_API_TOKEN is sent only in the X-Access-Token header and is never included in this debug output.',
-      'Travelpayouts Data API is cache-based, so empty results can mean no cached data for the route/date.'
+      'Aviasales Data API is cache-based, so empty results can mean no cached price for this exact route/date.'
     ],
     travelpayoutsStatus: status,
     responseBodySummary: summarizeTravelpayoutsBody(payload, rawBody),
@@ -259,23 +282,7 @@ function createDebugInfo(search, url, status, payload, rawBody, cached) {
   };
 }
 
-async function fetchFlightPrices(search, options = {}) {
-  const cacheKey = getCacheKey(search);
-  const cached = getCachedPrices(cacheKey);
-  const url = buildTravelpayoutsUrl(search);
-
-  if (cached) {
-    const response = { ...cached, cached: true };
-    if (options.debug) {
-      response.debug = createDebugInfo(search, url, 200, { prices: cached.results }, '', true);
-    }
-    return response;
-  }
-
-  if (!TP_API_TOKEN) {
-    throw new Error('TP_API_TOKEN missing');
-  }
-
+async function requestTravelpayouts(url) {
   const response = await fetch(url, {
     headers: {
       'X-Access-Token': TP_API_TOKEN,
@@ -292,29 +299,116 @@ async function fetchFlightPrices(search, options = {}) {
     payload = null;
   }
 
+  return {
+    response,
+    payload,
+    rawBody
+  };
+}
+
+async function attemptTravelpayoutsSearch(search, overrides = {}) {
+  const url = buildTravelpayoutsUrl(search, overrides);
+  const { response, payload, rawBody } = await requestTravelpayouts(url);
   const debug = createDebugInfo(search, url, response.status, payload, rawBody, false);
 
-  if (!response.ok) {
-    const error = new Error(`Travelpayouts API returned ${response.status}`);
+  if (!response.ok || payload?.success === false) {
+    const message = payload?.error || `Travelpayouts API returned ${response.status}`;
+    const error = new Error(message);
     error.status = response.status;
     error.debug = debug;
     throw error;
   }
 
-  const results = normalizeTravelpayoutsResults(payload, search);
+  return {
+    results: normalizeTravelpayoutsResults(payload, search),
+    debug
+  };
+}
+
+function buildSearchAttempts(search) {
+  const attempts = [
+    {
+      label: 'exact',
+      overrides: {
+        departure_at: search.depart_date,
+        return_at: search.return_date
+      }
+    }
+  ];
+
+  if (isExactDate(search.depart_date)) {
+    attempts.push({
+      label: 'month',
+      overrides: {
+        departure_at: toMonth(search.depart_date),
+        return_at: search.return_date ? toMonth(search.return_date) : ''
+      }
+    });
+  }
+
+  return attempts;
+}
+
+async function fetchFlightPrices(search, options = {}) {
+  const cacheKey = getCacheKey(search);
+  const cached = getCachedPrices(cacheKey);
+  const firstUrl = buildTravelpayoutsUrl(search);
+
+  if (cached) {
+    const response = { ...cached, cached: true };
+    if (options.debug) {
+      response.debug = createDebugInfo(search, firstUrl, 200, { data: cached.results }, '', true);
+    }
+    return response;
+  }
+
+  if (!TP_API_TOKEN) {
+    throw new Error('TP_API_TOKEN missing');
+  }
+
+  const debugAttempts = [];
+  let results = [];
+
+  for (const attempt of buildSearchAttempts(search)) {
+    let data;
+
+    try {
+      data = await attemptTravelpayoutsSearch(search, attempt.overrides);
+    } catch (error) {
+      if (error.debug) {
+        debugAttempts.push({
+          label: attempt.label,
+          ...error.debug
+        });
+      }
+      error.debug = { attempts: debugAttempts };
+      throw error;
+    }
+
+    debugAttempts.push({
+      label: attempt.label,
+      ...data.debug
+    });
+
+    if (data.results.length > 0) {
+      results = data.results;
+      break;
+    }
+  }
+
   const noCachedData = results.length === 0;
   const responsePayload = {
     results,
     fetchedAt: new Date().toISOString(),
     noCachedData,
-    message: noCachedData ? 'No cached Travelpayouts data found for this route and date.' : ''
+    message: noCachedData ? 'No cached price found for this exact route/date. Continue to live search.' : ''
   };
   setCachedPrices(cacheKey, responsePayload);
 
   return {
     ...responsePayload,
     cached: false,
-    ...(options.debug ? { debug } : {})
+    ...(options.debug ? { debug: { attempts: debugAttempts } } : {})
   };
 }
 
