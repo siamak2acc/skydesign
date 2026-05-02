@@ -63,7 +63,7 @@ function getTrustedWidgetEmbedUrl() {
   }
 }
 
-function buildAviasalesUrl(search) {
+function buildAviasalesSearchUrl(search) {
   const url = new URL(AVIASALES_SEARCH_URL);
   if (TP_MARKER) {
     url.searchParams.set('marker', TP_MARKER);
@@ -77,7 +77,12 @@ function buildAviasalesUrl(search) {
     url.searchParams.set('return_date', search.return_date);
   }
 
-  url.searchParams.set('adults', search.adults);
+  url.searchParams.set('adults', search.adults || '1');
+  url.searchParams.set('children', '0');
+  url.searchParams.set('infants', '0');
+  url.searchParams.set('trip_class', '0');
+  url.searchParams.set('one_way', search.return_date ? 'false' : 'true');
+  url.searchParams.set('locale', 'en');
 
   return url.toString();
 }
@@ -207,7 +212,7 @@ function normalizeTravelpayoutsResults(payload, search) {
         gate: item.gate || item.gate_id || '',
         foundAt: item.found_at || '',
         expiresAt: item.expires_at || '',
-        dealUrl: buildAviasalesUrl(resultSearch)
+        dealUrl: buildAviasalesSearchUrl(resultSearch)
       };
     });
 }
@@ -446,7 +451,7 @@ app.get('/', (req, res) => {
 app.get('/api/flight-prices', async (req, res) => {
   const search = normalizeSearch(req.query);
   const errors = validateSearch(search);
-  const fallbackUrl = buildAviasalesUrl(search);
+  const fallbackUrl = buildAviasalesSearchUrl(search);
   const debugEnabled = req.query.debug === '1';
 
   if (errors.length > 0) {
@@ -488,7 +493,7 @@ app.get('/flight-deal-finder', async (req, res) => {
     ['origin', 'destination', 'depart_date', 'return_date', 'currency', 'adults'].includes(key)
   );
   const search = normalizeSearch(req.query);
-  const fallbackUrl = hasSearch ? buildAviasalesUrl(search) : '';
+  const fallbackUrl = hasSearch ? buildAviasalesSearchUrl(search) : '';
   const baseOptions = {
     activePath: '/flight-deal-finder',
     pageTitle: 'Flight Deal Finder | SkyDesign',
@@ -550,12 +555,12 @@ app.post('/flight-deal-finder', (req, res) => {
       pageTitle: 'Flight Deal Finder | SkyDesign',
       metaDescription: 'Use the SkyDesign flight deal finder to start a flight search.',
       formValues: search,
-      fallbackUrl: buildAviasalesUrl(search),
+      fallbackUrl: buildAviasalesSearchUrl(search),
       error: errors.join(' ')
     });
   }
 
-  return res.redirect(302, buildAviasalesUrl(search));
+  return res.redirect(302, buildAviasalesSearchUrl(search));
 });
 
 app.get('/cheap-flights', (req, res) => {
