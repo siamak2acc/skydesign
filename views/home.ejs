@@ -2,12 +2,10 @@
 
 <section class="home-hero">
   <div class="home-hero-inner">
-    <div class="home-hero-copy">
-      <p class="eyebrow">skydesign.com.au</p>
-      <h1>Find cheap flight deals from Australia</h1>
-      <p>Search cached fares, compare popular routes, and continue to live Aviasales search when cached Travelpayouts prices are not available.</p>
-    </div>
-    <div class="home-search-panel">
+    <p class="eyebrow">skydesign.com.au</p>
+    <h1 class="home-hero-title">Find cheap flight deals from Australia</h1>
+    <p class="home-hero-lead">Search cached fares, compare popular routes, and continue to live Aviasales search when no cached price is available.</p>
+    <div class="home-search-card">
       <%- include('partials/search-form', {
         formAction: '/flight-deal-finder',
         formMethod: 'get',
@@ -54,6 +52,30 @@
       <p>Explore cached Thailand fares from Sydney and continue to live search when needed.</p>
       <a class="button button-secondary" href="/flight-deal-finder?origin=SYD&destination=BKK&depart_date=2026-06&return_date=2026-07&adults=1&currency=AUD">Search deals</a>
     </article>
+  </div>
+</section>
+
+<section class="band">
+  <div class="section-header">
+    <p class="eyebrow">How it works</p>
+    <h2>Three steps to smarter flight search</h2>
+  </div>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <h3>Enter your route</h3>
+      <p>Enter origin, destination, and travel dates. SkyDesign queries cached fare data from the Travelpayouts API.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <h3>Review deal cards</h3>
+      <p>Cached fares appear as deal cards showing price, airline, and dates. Compare options before deciding where to book.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <h3>Continue to live search</h3>
+      <p>Click View Deal or the fallback link to open a live Aviasales search for your exact route, always in English.</p>
+    </div>
   </div>
 </section>
 

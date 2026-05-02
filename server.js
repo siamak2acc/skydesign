@@ -83,6 +83,7 @@ function buildAviasalesSearchUrl(search) {
   url.searchParams.set('trip_class', '0');
   url.searchParams.set('one_way', search.return_date ? 'false' : 'true');
   url.searchParams.set('locale', 'en');
+  url.searchParams.set('lang', 'en');
 
   return url.toString();
 }
@@ -438,6 +439,11 @@ app.get('/env-check', (req, res) => {
     TP_MARKER: TP_MARKER ? 'OK' : 'MISSING',
     TP_API_TOKEN: TP_API_TOKEN ? 'OK' : 'MISSING'
   });
+});
+
+app.get('/debug-aviasales-link', (req, res) => {
+  const search = normalizeSearch(req.query);
+  return res.json({ url: buildAviasalesSearchUrl(search) });
 });
 
 app.get('/', (req, res) => {
