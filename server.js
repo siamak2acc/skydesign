@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 const AVIASALES_PRICES_FOR_DATES_URL = 'https://api.travelpayouts.com/aviasales/v3/prices_for_dates';
 const TP_PARTNER_BASE = 'https://tp.media/r';
 const TP_PARTNER_PROGRAM = '4114';
-const AVIASALES_EN_URL = 'https://www.aviasales.com/';
+const PARTNER_TARGET_URL = 'https://www.aviasales.com/';
 const TP_MARKER = process.env.TP_MARKER || '';
 const TP_API_TOKEN = process.env.TP_API_TOKEN || '';
 const TP_WIDGET_EMBED_URL = process.env.TP_WIDGET_EMBED_URL || '';
@@ -54,10 +54,7 @@ function getTrustedWidgetEmbedUrl() {
     const isTrustedHost =
       host === 'www.travelpayouts.com' ||
       host === 'travelpayouts.com' ||
-      host.endsWith('.travelpayouts.com') ||
-      host === 'www.aviasales.com' ||
-      host === 'aviasales.com' ||
-      host.endsWith('.aviasales.com');
+      host.endsWith('.travelpayouts.com');
 
     return isTrustedHost ? url.toString() : '';
   } catch (error) {
@@ -66,7 +63,7 @@ function getTrustedWidgetEmbedUrl() {
 }
 
 function buildTravelpayoutsPartnerUrl(params) {
-  const target = new URL(AVIASALES_EN_URL);
+  const target = new URL(PARTNER_TARGET_URL);
   target.searchParams.set('locale', 'en-us');
   target.searchParams.set('market', 'us');
   target.searchParams.set('currency', (params && params.currency) || 'AUD');
@@ -79,6 +76,22 @@ function buildTravelpayoutsPartnerUrl(params) {
   url.searchParams.set('u', target.toString());
 
   return url.toString();
+}
+
+function buildFlightDealFinderPath(search) {
+  const url = new URL('/flight-deal-finder', 'https://skydesign.local');
+  url.searchParams.set('origin', search.origin);
+  url.searchParams.set('destination', search.destination);
+  url.searchParams.set('depart_date', search.depart_date);
+
+  if (search.return_date) {
+    url.searchParams.set('return_date', search.return_date);
+  }
+
+  url.searchParams.set('currency', search.currency || 'AUD');
+  url.searchParams.set('adults', search.adults || '1');
+
+  return `${url.pathname}${url.search}`;
 }
 
 function normalizeSearch(body) {
@@ -437,7 +450,7 @@ app.get('/env-check', (req, res) => {
 
 app.get('/debug-aviasales-link', (req, res) => {
   const search = normalizeSearch(req.query);
-  return res.json({ url: buildTravelpayoutsPartnerUrl(search) });
+  return res.type('text/plain').send(buildTravelpayoutsPartnerUrl(search));
 });
 
 app.get('/', (req, res) => {
@@ -560,7 +573,7 @@ app.post('/flight-deal-finder', (req, res) => {
     });
   }
 
-  return res.redirect(302, buildTravelpayoutsPartnerUrl(search));
+  return res.redirect(302, buildFlightDealFinderPath(search));
 });
 
 app.get('/cheap-flights', (req, res) => {
