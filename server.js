@@ -13,6 +13,7 @@ const PARTNER_TARGET_URL = 'https://www.aviasales.com/';
 const TP_MARKER = process.env.TP_MARKER || '';
 const TP_API_TOKEN = process.env.TP_API_TOKEN || '';
 const TP_WIDGET_EMBED_URL = process.env.TP_WIDGET_EMBED_URL || '';
+const ENABLE_AVIASALES_REDIRECTS = process.env.ENABLE_AVIASALES_REDIRECTS === 'true';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const flightPriceCache = new Map();
 
@@ -31,6 +32,9 @@ function renderPage(res, view, options = {}) {
     metaDescription: options.metaDescription || 'Find smarter flight deals from Australia.',
     widgetEmbedUrl: getTrustedWidgetEmbedUrl(),
     fallbackUrl: '',
+    liveSearchUrl: '/flight-deal-finder',
+    liveSearchMessage: 'Live booking partner integration is being updated. Please check back shortly.',
+    enableAviasalesRedirects: ENABLE_AVIASALES_REDIRECTS,
     results: [],
     popularResults: [],
     searched: false,
@@ -63,6 +67,10 @@ function getTrustedWidgetEmbedUrl() {
 }
 
 function buildTravelpayoutsPartnerUrl(params) {
+  if (!ENABLE_AVIASALES_REDIRECTS) {
+    return '';
+  }
+
   const target = new URL(PARTNER_TARGET_URL);
   target.searchParams.set('locale', 'en-us');
   target.searchParams.set('market', 'us');
@@ -134,7 +142,7 @@ function validateSearch(search, options = {}) {
     errors.push('Adults must be between 1 and 9.');
   }
 
-  if (!TP_MARKER && options.requireMarker !== false) {
+  if (ENABLE_AVIASALES_REDIRECTS && !TP_MARKER && options.requireMarker !== false) {
     errors.push('Travelpayouts marker is not configured. Set TP_MARKER in the server environment.');
   }
 
@@ -423,7 +431,7 @@ async function fetchFlightPrices(search, options = {}) {
     popularResults,
     fetchedAt: new Date().toISOString(),
     noCachedData,
-    message: noCachedData ? 'No cached price is available for this exact route/date. Continue to live search for the latest fares.' : ''
+    message: noCachedData ? 'No cached price is available for this exact route/date.' : ''
   };
   setCachedPrices(cacheKey, responsePayload);
 
@@ -444,13 +452,17 @@ app.get('/health', (req, res) => {
 app.get('/env-check', (req, res) => {
   res.status(200).json({
     TP_MARKER: TP_MARKER ? 'OK' : 'MISSING',
-    TP_API_TOKEN: TP_API_TOKEN ? 'OK' : 'MISSING'
+    TP_API_TOKEN: TP_API_TOKEN ? 'OK' : 'MISSING',
+    ENABLE_AVIASALES_REDIRECTS
   });
 });
 
 app.get('/debug-aviasales-link', (req, res) => {
   const search = normalizeSearch(req.query);
-  return res.type('text/plain').send(buildTravelpayoutsPartnerUrl(search));
+  const partnerUrl = buildTravelpayoutsPartnerUrl(search);
+  return res
+    .type('text/plain')
+    .send(partnerUrl || 'Outbound flight redirects are disabled. Live booking partner integration is being updated.');
 });
 
 app.get('/', (req, res) => {
@@ -488,7 +500,7 @@ app.get('/api/flight-prices', async (req, res) => {
     const isMissingToken = error.message === 'TP_API_TOKEN missing';
     const message = isMissingToken
       ? 'Travelpayouts API token is not configured.'
-      : 'Travelpayouts API request failed. Use the Aviasales fallback search.';
+      : 'Travelpayouts API request failed. Live booking partner integration is being updated.';
 
     return res.status(502).json({
       success: false,
@@ -553,7 +565,7 @@ app.get('/flight-deal-finder', async (req, res) => {
       popularResults: [],
       currency: search.currency,
       fallbackUrl,
-      apiError: 'Travelpayouts API request failed. Use the Aviasales fallback search.'
+      apiError: 'Travelpayouts API request failed. Live booking partner integration is being updated.'
     });
   }
 });

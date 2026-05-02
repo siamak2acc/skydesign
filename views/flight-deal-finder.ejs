@@ -3,7 +3,7 @@
 <section class="page-hero compact">
   <p class="eyebrow">Flight Deal Finder</p>
   <h1>Search for a flight deal</h1>
-  <p>Enter IATA airport codes and dates. SkyDesign checks Travelpayouts server-side, keeps API tokens private, and falls back to Aviasales affiliate search when cached prices are unavailable.</p>
+  <p>Enter IATA airport codes and dates. SkyDesign checks Travelpayouts server-side, keeps API tokens private, and shows cached fare data when available.</p>
 </section>
 
 <section class="tool-shell">
@@ -16,10 +16,12 @@
     <ul class="check-list">
       <li>Token never reaches frontend code</li>
       <li>Cached data is normal, not guaranteed</li>
-      <li>Affiliate fallback remains available</li>
+      <li>Live booking partner integration is being updated</li>
     </ul>
-    <% if (fallbackUrl) { %>
-      <a class="button button-secondary fallback-button" href="<%= fallbackUrl %>" rel="nofollow sponsored">Search on Aviasales</a>
+    <% if (enableAviasalesRedirects && fallbackUrl) { %>
+      <a class="button button-secondary fallback-button" href="<%= fallbackUrl %>" rel="nofollow sponsored">Search live flight deals</a>
+    <% } else { %>
+      <a class="button button-secondary fallback-button" href="<%= liveSearchUrl %>">Search live flight deals</a>
     <% } %>
   </aside>
 </section>
@@ -39,23 +41,27 @@
     <% if (apiError) { %>
       <div class="empty-state">
         <strong><%= apiError %></strong>
-        <span>Use the fallback search button to continue with your affiliate marker.</span>
-        <% if (fallbackUrl) { %>
-          <a class="button button-primary" href="<%= fallbackUrl %>" rel="nofollow sponsored">Search on Aviasales</a>
+        <span><%= liveSearchMessage %></span>
+        <% if (enableAviasalesRedirects && fallbackUrl) { %>
+          <a class="button button-primary" href="<%= fallbackUrl %>" rel="nofollow sponsored">Search live flight deals</a>
+        <% } else { %>
+          <a class="button button-primary" href="<%= liveSearchUrl %>">Search live flight deals</a>
         <% } %>
       </div>
     <% } else if (results && results.length) { %>
       <div class="deal-grid">
         <% results.forEach((deal) => { %>
-          <%- include('partials/deal-card', { deal, fetchedAt }) %>
+          <%- include('partials/deal-card', { deal, fetchedAt, enableAviasalesRedirects }) %>
         <% }) %>
       </div>
     <% } else { %>
       <div class="empty-state">
-        <strong><%= noCachedDataMessage || 'No cached price is available for this exact route/date. Continue to live search for the latest fares.' %></strong>
-        <span>Travelpayouts cached data can be empty for specific routes and dates. Live Aviasales search can still show current fares.</span>
-        <% if (fallbackUrl) { %>
-          <a class="button button-primary" href="<%= fallbackUrl %>" rel="nofollow sponsored">Search on Aviasales</a>
+        <strong><%= noCachedDataMessage || 'No cached price is available for this exact route/date.' %></strong>
+        <span>Travelpayouts cached data can be empty for specific routes and dates. <%= liveSearchMessage %></span>
+        <% if (enableAviasalesRedirects && fallbackUrl) { %>
+          <a class="button button-primary" href="<%= fallbackUrl %>" rel="nofollow sponsored">Search live flight deals</a>
+        <% } else { %>
+          <a class="button button-primary" href="<%= liveSearchUrl %>">Search live flight deals</a>
         <% } %>
       </div>
     <% } %>
@@ -70,7 +76,7 @@
       </div>
       <div class="deal-grid">
         <% popularResults.forEach((deal) => { %>
-          <%- include('partials/deal-card', { deal, fetchedAt }) %>
+          <%- include('partials/deal-card', { deal, fetchedAt, enableAviasalesRedirects }) %>
         <% }) %>
       </div>
     </section>

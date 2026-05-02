@@ -37,5 +37,9 @@
       </div>
     <% } %>
   </dl>
-  <a class="button button-primary" href="<%= deal.dealUrl %>" rel="nofollow sponsored">View Deal</a>
+  <% if (enableAviasalesRedirects && deal.dealUrl) { %>
+    <a class="button button-primary" href="<%= deal.dealUrl %>" rel="nofollow sponsored">Search live flight deals</a>
+  <% } else { %>
+    <p class="deal-card-note">Live booking partner integration is being updated. Please check back shortly.</p>
+  <% } %>
 </article>

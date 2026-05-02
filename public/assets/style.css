@@ -477,6 +477,12 @@ textarea {
   color: var(--muted);
 }
 
+.deal-card-note {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-weight: 700;
+}
+
 .route-code {
   color: var(--accent-dark) !important;
   font-weight: 900;

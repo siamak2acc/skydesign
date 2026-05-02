@@ -21,6 +21,7 @@ PORT=3000
 SITE_URL=https://skydesign.com.au
 TP_MARKER=your_travelpayouts_marker
 TP_API_TOKEN=your_travelpayouts_data_api_token
+ENABLE_AVIASALES_REDIRECTS=false
 ```
 
 Optional:
@@ -71,7 +72,9 @@ X-Access-Token: process.env.TP_API_TOKEN
 
 The token is not logged and is not returned in any route response.
 
-Price results are cached in memory for 24 hours by search parameters. If Travelpayouts has no cached result, the UI shows: `No cached price is available for this exact route/date. Continue to live search for the latest fares.` The Aviasales fallback link uses `TP_MARKER`.
+Price results are cached in memory for 24 hours by search parameters. If Travelpayouts has no cached result, the UI shows: `No cached price is available for this exact route/date.`
+
+Outbound Aviasales redirects are disabled by default with `ENABLE_AVIASALES_REDIRECTS=false`. In this mode, the app does not generate `tp.media` partner URLs, result cards do not show external deal buttons, and the live search action stays on `/flight-deal-finder`.
 
 ## Local Setup
 
@@ -98,7 +101,8 @@ Expected shape:
 ```json
 {
   "TP_MARKER": "OK",
-  "TP_API_TOKEN": "OK"
+  "TP_API_TOKEN": "OK",
+  "ENABLE_AVIASALES_REDIRECTS": false
 }
 ```
 
@@ -108,8 +112,8 @@ Expected shape:
 2. Visit `/env-check` and confirm `TP_MARKER` and `TP_API_TOKEN` are `OK`.
 3. Visit `/flight-deal-finder`.
 4. Search with IATA codes such as `SYD` to `DXB`, dates, adults, and currency.
-5. Confirm returned results show `View Deal` buttons.
-6. If no API results are available, confirm the Aviasales fallback button appears.
+5. Confirm returned results do not show external deal buttons when `ENABLE_AVIASALES_REDIRECTS=false`.
+6. If no API results are available, confirm the live search button stays on `/flight-deal-finder`.
 
 For backend diagnostics, call:
 
